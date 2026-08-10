@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Integra — Remote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="brand">
+    <p class="brand__name">Integra</p>
+    <p class="brand__model">DRX-3.4</p>
+  </header>
+
+  <main class="remote">
+    <!-- 1. Status strip (sticky) — future SSE target #status-strip -->
+    <section id="status-strip" class="status" aria-live="polite">
+      <div class="status__row">
+        <span id="st-power" class="pill pill--power" data-on="true">On</span>
+        <span id="st-input" class="status__input">Shield</span>
+        <span id="st-vol" class="status__vol">40.0</span>
+      </div>
+      <div class="status__row status__row--meta">
+        <span id="st-mute" class="meta" hidden>Muted</span>
+        <span id="st-lmd" class="meta">Straight Decode</span>
+        <span id="st-dirac" class="meta">Dirac Off</span>
+      </div>
+      <p id="st-fld" class="status__fld">Shield&nbsp;&nbsp;&nbsp;&nbsp;40.0</p>
+    </section>
+
+    <!-- 2. Volume + centre trim -->
+    <section class="section section--volume" aria-labelledby="vol-heading">
+      <h2 id="vol-heading" class="section__title">Volume</h2>
+      <div class="volume">
+        <button type="button" class="btn btn--round" id="vol-down" aria-label="Volume down">−</button>
+        <div class="volume__mid">
+          <input type="range" id="vol-slider" min="0" max="100" step="0.5" value="40" aria-valuetext="40" />
+          <output id="vol-readout" for="vol-slider" class="volume__readout">40.0</output>
+        </div>
+        <button type="button" class="btn btn--round" id="vol-up" aria-label="Volume up">+</button>
+      </div>
+
+      <div class="field field--under-vol">
+        <p class="field__label">Centre trim <span id="ctl-readout" class="field__value">+10 dB</span></p>
+        <div class="trim">
+          <button type="button" class="btn btn--round btn--sm" id="ctl-down" aria-label="Centre down">−</button>
+          <input type="range" id="ctl-slider" min="-12" max="12" step="1" value="10" />
+          <button type="button" class="btn btn--round btn--sm" id="ctl-up" aria-label="Centre up">+</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Primary actions -->
+    <section class="section section--actions" aria-label="Primary actions">
+      <div class="actions">
+        <button type="button" class="btn btn--action" id="btn-mute">Mute</button>
+        <button type="button" class="btn btn--action btn--accent" id="btn-defaults">Apply defaults</button>
+        <button type="button" class="btn btn--action" id="btn-power">Standby</button>
+      </div>
+    </section>
+
+    <!-- 4. Input grid -->
+    <section class="section" aria-labelledby="input-heading">
+      <h2 id="input-heading" class="section__title">Input</h2>
+      <div class="input-grid" id="input-grid" role="group" aria-label="Input select"></div>
+    </section>
+
+    <!-- 5. Web tuner (shown when FM/AM selected; also reachable via band toggle) -->
+    <section class="section" id="tuner-section" aria-labelledby="tuner-heading" hidden>
+      <h2 id="tuner-heading" class="section__title">Tuner</h2>
+      <div class="field">
+        <p class="field__label">Band</p>
+        <div class="segmented" id="band-group" role="group">
+          <button type="button" class="seg" data-band="24">FM</button>
+          <button type="button" class="seg" data-band="25">AM</button>
+        </div>
+      </div>
+      <div class="tuner">
+        <button type="button" class="btn btn--round" id="tune-down" aria-label="Seek down">−</button>
+        <div class="tuner__mid">
+          <output id="tune-freq" class="tuner__freq">92.10</output>
+          <span id="tune-unit" class="tuner__unit">MHz</span>
+          <p id="tune-preset-label" class="tuner__preset-label">Preset —</p>
+        </div>
+        <button type="button" class="btn btn--round" id="tune-up" aria-label="Seek up">+</button>
+      </div>
+      <div class="field">
+        <p class="field__label">Presets</p>
+        <div class="preset-grid" id="preset-grid" role="group" aria-label="Tuner presets"></div>
+      </div>
+      <p class="tuner__hint">Mock of <code>SLI24/25</code> + <code>TUN</code> / <code>PRS</code> — real app would send eISCP via Go.</p>
+    </section>
+
+    <!-- 6. Dialogue / mode / Room EQ -->
+    <section class="section" aria-labelledby="sound-heading">
+      <h2 id="sound-heading" class="section__title">Dialogue &amp; Room EQ</h2>
+
+      <div class="field">
+        <p class="field__label">Listening mode</p>
+        <div class="segmented" id="lmd-group" role="group">
+          <button type="button" class="seg" data-lmd="40">Straight Decode</button>
+          <button type="button" class="seg" data-lmd="82">Neural:X</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field__label">Late Night <span class="field__hint">Off / Low on this unit</span></p>
+        <div class="segmented" id="ltn-group" role="group">
+          <button type="button" class="seg" data-ltn="00">Off</button>
+          <button type="button" class="seg" data-ltn="01">Low</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field__label">Dirac Live</p>
+        <div class="segmented segmented--wrap" id="dss-group" role="group">
+          <button type="button" class="seg" data-dss="00">Off</button>
+          <button type="button" class="seg" data-dss="01">Slot 1</button>
+          <button type="button" class="seg" data-dss="02">Slot 2</button>
+          <button type="button" class="seg" data-dss="03">Slot 3</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="field__label">Equalizer</p>
+        <div class="segmented segmented--wrap" id="eqs-group" role="group">
+          <button type="button" class="seg" data-eqs="00">Off</button>
+          <button type="button" class="seg" data-eqs="01">Preset 1</button>
+          <button type="button" class="seg" data-eqs="02">Preset 2</button>
+          <button type="button" class="seg" data-eqs="03">Preset 3</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. A/V detail -->
+    <section class="section section--muted" aria-labelledby="av-heading">
+      <h2 id="av-heading" class="section__title">A/V detail</h2>
+      <dl class="detail" id="av-detail">
+        <div><dt>Audio</dt><dd id="det-ifa">HDMI 4 · DTS-HD · 48 kHz · 5.1 → 3.1</dd></div>
+        <div><dt>Video</dt><dd id="det-ifv">4K 3840×2160 @ 59 Hz · YCbCr 4:2:2 · 24-bit</dd></div>
+        <div>
+          <dt>Temp</dt>
+          <dd>
+            <span id="det-tpd">82 °C</span>
+            <span id="det-tpd-raw" class="detail__raw">TPD F 82C 28</span>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="section section--muted section--later" aria-labelledby="later-heading">
+      <h2 id="later-heading" class="section__title">Later</h2>
+      <p class="later-note">NET services and zones — not wired in this mock. Tuner is above when FM/AM is selected.</p>
+      <div class="later-chips" aria-hidden="true">
+        <span class="chip">Zone 2</span>
+        <span class="chip">Zone 3</span>
+        <span class="chip">AirPlay</span>
+        <span class="chip">Spotify</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Static UX mock — no amp connection</p>
+  </footer>
+
+  <!-- Standby confirmation -->
+  <div id="standby-dialog" class="dialog" hidden role="dialog" aria-modal="true" aria-labelledby="standby-title">
+    <div class="dialog__backdrop" id="standby-backdrop"></div>
+    <div class="dialog__panel">
+      <h2 id="standby-title" class="dialog__title">Standby?</h2>
+      <p class="dialog__body">Put the Integra in standby?</p>
+      <div class="dialog__actions">
+        <button type="button" class="btn btn--action" id="standby-cancel">Cancel</button>
+        <button type="button" class="btn btn--action btn--danger" id="standby-confirm">Standby</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{{define "status.html"}}
+<section id="status-strip" class="status" aria-live="polite">
+  <div class="status__row">
+    {{if .Power}}
+    <span class="pill pill--power" data-on="true">On</span>
+    {{else}}
+    <span class="pill pill--power" data-on="false">Standby</span>
+    {{end}}
+    <span class="status__input">{{.InputName}}</span>
+    <span class="status__vol">{{.VolStr}}</span>
+  </div>
+  <div class="status__row status__row--meta">
+    {{if .Mute}}<span class="meta">Muted</span>{{end}}
+    <span class="meta">{{.LMDName}}</span>
+    <span class="meta">{{.DSSName}}</span>
+  </div>
+  <p class="status__fld">{{.Fld}}</p>
+</section>
+{{end}}

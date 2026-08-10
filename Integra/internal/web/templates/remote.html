@@ -1,0 +1,177 @@
+{{define "remote.html"}}
+<main id="remote" class="remote"
+  hx-swap="outerHTML"
+  hx-target="#remote">
+
+  {{template "status.html" .}}
+
+  <section class="section section--volume" aria-labelledby="vol-heading">
+    <h2 id="vol-heading" class="section__title">Volume</h2>
+    <div class="volume">
+      <button type="button" class="btn btn--round" aria-label="Volume down"
+        hx-post="/cmd/vol_down" hx-target="#remote" hx-swap="outerHTML">−</button>
+      <div class="volume__mid">
+        <input type="range" name="value" min="0" max="100" step="0.5" value="{{.VolDisplay}}"
+          aria-valuetext="{{.VolStr}}"
+          hx-post="/cmd/vol_set" hx-target="#remote" hx-swap="outerHTML"
+          hx-trigger="change, mouseup, touchend" />
+        <output class="volume__readout">{{.VolStr}}</output>
+      </div>
+      <button type="button" class="btn btn--round" aria-label="Volume up"
+        hx-post="/cmd/vol_up" hx-target="#remote" hx-swap="outerHTML">+</button>
+    </div>
+
+    <div class="field field--under-vol">
+      <p class="field__label">Centre trim <span class="field__value">{{.CTLStr}}</span></p>
+      <div class="trim">
+        <button type="button" class="btn btn--round btn--sm" aria-label="Centre down"
+          hx-post="/cmd/ctl_down" hx-target="#remote" hx-swap="outerHTML">−</button>
+        <input type="range" name="value" min="-12" max="12" step="1" value="{{.CTL}}"
+          hx-post="/cmd/ctl_set" hx-target="#remote" hx-swap="outerHTML"
+          hx-trigger="change, mouseup, touchend" />
+        <button type="button" class="btn btn--round btn--sm" aria-label="Centre up"
+          hx-post="/cmd/ctl_up" hx-target="#remote" hx-swap="outerHTML">+</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--actions" aria-label="Primary actions">
+    <div class="actions">
+      <button type="button" class="btn btn--action"
+        hx-post="/cmd/mute" hx-target="#remote" hx-swap="outerHTML">{{if .Mute}}Unmute{{else}}Mute{{end}}</button>
+      <button type="button" class="btn btn--action btn--accent"
+        hx-post="/cmd/defaults" hx-target="#remote" hx-swap="outerHTML">Apply defaults</button>
+      {{if .Power}}
+      <button type="button" class="btn btn--action"
+        onclick="document.getElementById('standby-dialog').hidden=false">Standby</button>
+      {{else}}
+      <button type="button" class="btn btn--action btn--accent"
+        hx-post="/cmd/power" hx-target="#remote" hx-swap="outerHTML">Power on</button>
+      {{end}}
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="input-heading">
+    <h2 id="input-heading" class="section__title">Input</h2>
+    <div class="input-grid" role="group" aria-label="Input select">
+      {{range .Inputs}}
+      <button type="button" class="btn{{if eq $.InputID .ID}} is-active{{end}}"
+        hx-post="/cmd/input" hx-vals='{"id":"{{.ID}}"}' hx-target="#remote" hx-swap="outerHTML">{{.Name}}</button>
+      {{end}}
+    </div>
+  </section>
+
+  {{if .IsTuner}}
+  <section class="section" aria-labelledby="tuner-heading">
+    <h2 id="tuner-heading" class="section__title">Tuner</h2>
+    <div class="field">
+      <p class="field__label">Band</p>
+      <div class="segmented" role="group">
+        <button type="button" class="seg{{if .IsFM}} is-active{{end}}"
+          hx-post="/cmd/band" hx-vals='{"id":"24"}' hx-target="#remote" hx-swap="outerHTML">FM</button>
+        <button type="button" class="seg{{if not .IsFM}} is-active{{end}}"
+          hx-post="/cmd/band" hx-vals='{"id":"25"}' hx-target="#remote" hx-swap="outerHTML">AM</button>
+      </div>
+    </div>
+    <div class="tuner">
+      <button type="button" class="btn btn--round" aria-label="Seek down"
+        hx-post="/cmd/tune_down" hx-target="#remote" hx-swap="outerHTML">−</button>
+      <div class="tuner__mid">
+        <output class="tuner__freq">{{.FreqStr}}</output>
+        <span class="tuner__unit">{{.FreqUnit}}</span>
+        <p class="tuner__preset-label">{{if .Preset}}Preset {{.Preset}}{{else}}Preset —{{end}}</p>
+      </div>
+      <button type="button" class="btn btn--round" aria-label="Seek up"
+        hx-post="/cmd/tune_up" hx-target="#remote" hx-swap="outerHTML">+</button>
+    </div>
+    <div class="field">
+      <p class="field__label">Presets</p>
+      <div class="preset-grid" role="group" aria-label="Tuner presets">
+        {{range $i := seq 1 8}}
+        <button type="button" class="btn{{if eq $.Preset $i}} is-active{{end}}"
+          hx-post="/cmd/preset" hx-vals='{"n":"{{$i}}"}' hx-target="#remote" hx-swap="outerHTML">{{$i}}</button>
+        {{end}}
+      </div>
+    </div>
+  </section>
+  {{end}}
+
+  <section class="section" aria-labelledby="sound-heading">
+    <h2 id="sound-heading" class="section__title">Dialogue &amp; Room EQ</h2>
+
+    <div class="field">
+      <p class="field__label">Listening mode</p>
+      <div class="segmented" role="group">
+        <button type="button" class="seg{{if eq .LMD "40"}} is-active{{end}}"
+          hx-post="/cmd/lmd" hx-vals='{"v":"40"}' hx-target="#remote" hx-swap="outerHTML">Straight Decode</button>
+        <button type="button" class="seg{{if eq .LMD "82"}} is-active{{end}}"
+          hx-post="/cmd/lmd" hx-vals='{"v":"82"}' hx-target="#remote" hx-swap="outerHTML">Neural:X</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <p class="field__label">Late Night <span class="field__hint">Off / Low on this unit</span></p>
+      <div class="segmented" role="group">
+        <button type="button" class="seg{{if eq .LTN "00"}} is-active{{end}}"
+          hx-post="/cmd/ltn" hx-vals='{"v":"00"}' hx-target="#remote" hx-swap="outerHTML">Off</button>
+        <button type="button" class="seg{{if eq .LTN "01"}} is-active{{end}}"
+          hx-post="/cmd/ltn" hx-vals='{"v":"01"}' hx-target="#remote" hx-swap="outerHTML">Low</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <p class="field__label">Dirac Live</p>
+      <div class="segmented segmented--wrap" role="group">
+        <button type="button" class="seg{{if eq .DSS "00"}} is-active{{end}}"
+          hx-post="/cmd/dss" hx-vals='{"v":"00"}' hx-target="#remote" hx-swap="outerHTML">Off</button>
+        <button type="button" class="seg{{if eq .DSS "01"}} is-active{{end}}"
+          hx-post="/cmd/dss" hx-vals='{"v":"01"}' hx-target="#remote" hx-swap="outerHTML">Slot 1</button>
+        <button type="button" class="seg{{if eq .DSS "02"}} is-active{{end}}"
+          hx-post="/cmd/dss" hx-vals='{"v":"02"}' hx-target="#remote" hx-swap="outerHTML">Slot 2</button>
+        <button type="button" class="seg{{if eq .DSS "03"}} is-active{{end}}"
+          hx-post="/cmd/dss" hx-vals='{"v":"03"}' hx-target="#remote" hx-swap="outerHTML">Slot 3</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <p class="field__label">Equalizer</p>
+      <div class="segmented segmented--wrap" role="group">
+        <button type="button" class="seg{{if eq .EQS "00"}} is-active{{end}}"
+          hx-post="/cmd/eqs" hx-vals='{"v":"00"}' hx-target="#remote" hx-swap="outerHTML">Off</button>
+        <button type="button" class="seg{{if eq .EQS "01"}} is-active{{end}}"
+          hx-post="/cmd/eqs" hx-vals='{"v":"01"}' hx-target="#remote" hx-swap="outerHTML">Preset 1</button>
+        <button type="button" class="seg{{if eq .EQS "02"}} is-active{{end}}"
+          hx-post="/cmd/eqs" hx-vals='{"v":"02"}' hx-target="#remote" hx-swap="outerHTML">Preset 2</button>
+        <button type="button" class="seg{{if eq .EQS "03"}} is-active{{end}}"
+          hx-post="/cmd/eqs" hx-vals='{"v":"03"}' hx-target="#remote" hx-swap="outerHTML">Preset 3</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--muted" aria-labelledby="av-heading">
+    <h2 id="av-heading" class="section__title">A/V detail</h2>
+    <dl class="detail">
+      <div><dt>Audio</dt><dd>{{.IFA}}</dd></div>
+      <div><dt>Video</dt><dd>{{.IFV}}</dd></div>
+      <div>
+        <dt>Temp</dt>
+        <dd>
+          <span>{{.TempC}} °C</span>
+          <span class="detail__raw">TPD {{.TPDRaw}}</span>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="section section--muted section--later" aria-labelledby="later-heading">
+    <h2 id="later-heading" class="section__title">Later</h2>
+    <p class="later-note">NET services and zones — not wired yet. Tuner appears when FM/AM is selected.</p>
+    <div class="later-chips" aria-hidden="true">
+      <span class="chip">Zone 2</span>
+      <span class="chip">Zone 3</span>
+      <span class="chip">AirPlay</span>
+      <span class="chip">Spotify</span>
+    </div>
+  </section>
+</main>
+{{end}}

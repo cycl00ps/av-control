@@ -1,0 +1,52 @@
+{{define "index.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Integra — Remote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/app.css" />
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="brand">
+    <p class="brand__name">Integra</p>
+    <p class="brand__model">DRX-3.4{{if .Mock}} · mock{{end}}</p>
+  </header>
+
+  {{template "remote.html" .}}
+
+  <footer class="foot">
+    {{if .Mock}}
+    <p>Mock amp — no eISCP connection</p>
+    {{else}}
+    <p>Live eISCP</p>
+    {{end}}
+  </footer>
+
+  <div id="standby-dialog" class="dialog" hidden role="dialog" aria-modal="true" aria-labelledby="standby-title">
+    <div class="dialog__backdrop" onclick="document.getElementById('standby-dialog').hidden=true"></div>
+    <div class="dialog__panel">
+      <h2 id="standby-title" class="dialog__title">Standby?</h2>
+      <p class="dialog__body">Put the Integra in standby?</p>
+      <div class="dialog__actions">
+        <button type="button" class="btn btn--action"
+          onclick="document.getElementById('standby-dialog').hidden=true">Cancel</button>
+        <button type="button" class="btn btn--action btn--danger"
+          hx-post="/cmd/power" hx-target="#remote" hx-swap="outerHTML"
+          onclick="document.getElementById('standby-dialog').hidden=true">Standby</button>
+      </div>
+    </div>
+  </div>
+
+  {{if not .Mock}}
+  <div hx-get="/partials/remote" hx-trigger="every 5s" hx-target="#remote" hx-swap="outerHTML" style="display:none"></div>
+  {{end}}
+</body>
+</html>
+{{end}}

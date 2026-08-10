@@ -1,0 +1,19 @@
+# Binaries / build
+*.exe
+*.test
+integra-web
+/Integra/integra-web
+
+# Secrets — never commit
+.env
+**/.env
+!.env.example
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Go
+vendor/
