@@ -8,8 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/app.css" />
-  <script src="/static/htmx.min.js" defer></script>
+  <link rel="stylesheet" href="{{.Base}}/static/app.css" />
+  <script src="{{.Base}}/static/htmx.min.js" defer></script>
+  <script src="{{.Base}}/static/app.js" defer></script>
 </head>
 <body>
   <div class="atmosphere" aria-hidden="true"></div>
@@ -38,14 +39,38 @@
         <button type="button" class="btn btn--action"
           onclick="document.getElementById('standby-dialog').hidden=true">Cancel</button>
         <button type="button" class="btn btn--action btn--danger"
-          hx-post="/cmd/power" hx-target="#remote" hx-swap="outerHTML"
+          hx-post="{{.Base}}/cmd/power" hx-target="#remote" hx-swap="outerHTML"
           onclick="document.getElementById('standby-dialog').hidden=true">Standby</button>
       </div>
     </div>
   </div>
 
+  <div id="loud-dialog" class="dialog" hidden role="dialog" aria-modal="true" aria-labelledby="loud-title">
+    <div class="dialog__backdrop" id="loud-cancel-backdrop"></div>
+    <div class="dialog__panel">
+      <h2 id="loud-title" class="dialog__title">Loud volume?</h2>
+      <p class="dialog__body" id="loud-body">Volume will go above the warning level. Continue?</p>
+      <div class="dialog__actions">
+        <button type="button" class="btn btn--action" id="loud-cancel">Cancel</button>
+        <button type="button" class="btn btn--action btn--danger" id="loud-confirm">Set volume anyway</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="preset-store-dialog" class="dialog" hidden role="dialog" aria-modal="true" aria-labelledby="preset-store-title">
+    <div class="dialog__backdrop" id="preset-store-backdrop"></div>
+    <div class="dialog__panel">
+      <h2 id="preset-store-title" class="dialog__title">Save preset?</h2>
+      <p class="dialog__body" id="preset-store-body">Save the current station to this preset?</p>
+      <div class="dialog__actions">
+        <button type="button" class="btn btn--action" id="preset-store-cancel">Cancel</button>
+        <button type="button" class="btn btn--action" id="preset-store-confirm">Save</button>
+      </div>
+    </div>
+  </div>
+
   {{if not .Mock}}
-  <div hx-get="/partials/remote" hx-trigger="every 5s" hx-target="#remote" hx-swap="outerHTML" style="display:none"></div>
+  <div id="remote-poll" hx-get="{{.Base}}/partials/remote" hx-trigger="every 5s" hx-target="#remote" hx-swap="outerHTML" hx-sync="#remote:abort" style="display:none"></div>
   {{end}}
 </body>
 </html>

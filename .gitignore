@@ -1,13 +1,16 @@
 # Binaries / build
 *.exe
 *.test
-integra-web
+/integra-web
 /Integra/integra-web
 
 # Secrets — never commit
 .env
 **/.env
 !.env.example
+
+# Runtime data (TuneIn pins, etc.)
+Integra/data/
 
 # IDE / OS
 .DS_Store

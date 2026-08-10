@@ -104,6 +104,69 @@ func (c *Client) Command(cmd3, param string) (string, error) {
 	return c.Exchange(cmd3+param, cmd3)
 }
 
+// ExchangeAll sends a command and returns every parsed ISCP message in the reply window.
+// Use for NET list/select where many NLS/NLT/NTI frames arrive together.
+func (c *Client) ExchangeAll(bodyWithoutBang string, readFor time.Duration) ([]Message, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if err := c.connect(); err != nil {
+		return nil, err
+	}
+	if readFor <= 0 {
+		readFor = 2 * time.Second
+	}
+	// Discard any late frames from a previous command so they are not
+	// mistaken for this reply (e.g. stale NLS U-rows after a list select).
+	_ = c.conn.SetReadDeadline(time.Now().Add(40 * time.Millisecond))
+	drain := make([]byte, 8192)
+	for {
+		n, err := c.conn.Read(drain)
+		if n == 0 || err != nil {
+			break
+		}
+	}
+	pkt := Packet("!1" + bodyWithoutBang)
+	_ = c.conn.SetDeadline(time.Now().Add(readFor + time.Second))
+	if _, err := c.conn.Write(pkt); err != nil {
+		_ = c.conn.Close()
+		c.conn = nil
+		return nil, err
+	}
+	time.Sleep(80 * time.Millisecond)
+	buf := make([]byte, 0, 16384)
+	tmp := make([]byte, 8192)
+	deadline := time.Now().Add(readFor)
+	idleUntil := time.Time{}
+	idleGrace := 350 * time.Millisecond
+	for time.Now().Before(deadline) {
+		_ = c.conn.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
+		n, err := c.conn.Read(tmp)
+		if n > 0 {
+			buf = append(buf, tmp[:n]...)
+			idleUntil = time.Now().Add(idleGrace)
+			continue
+		}
+		if err != nil {
+			if ne, ok := err.(net.Error); ok && ne.Timeout() {
+				if len(buf) > 0 && time.Now().After(idleUntil) {
+					break
+				}
+				continue
+			}
+			if err == io.EOF && len(buf) > 0 {
+				break
+			}
+			_ = c.conn.Close()
+			c.conn = nil
+			if len(buf) == 0 {
+				return nil, err
+			}
+			break
+		}
+	}
+	return ParseMessages(buf), nil
+}
+
 func (c *Client) Exchange(bodyWithoutBang, expectCmd string) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
