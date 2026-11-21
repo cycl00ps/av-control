@@ -1,0 +1,22 @@
+services:
+  integra-web:
+    build: .
+    restart: unless-stopped
+    environment:
+      INTEGRA_ADDRESS: "${INTEGRA_ADDRESS:-}"
+      INTEGRA_EISCP_PORT: "${INTEGRA_EISCP_PORT:-}"
+      INTEGRA_MOCK: "${INTEGRA_MOCK:-}"
+      INTEGRA_HTTP_ADDR: "0.0.0.0:8080"
+      INTEGRA_HTTP_BASE: "${INTEGRA_HTTP_BASE:-}"
+      INTEGRA_VOL_WARN: "${INTEGRA_VOL_WARN:-}"
+      listening_mode: "${listening_mode:-}"
+      master_volume: "${master_volume:-}"
+      center_level: "${center_level:-}"
+      late_night: "${late_night:-}"
+    ports:
+      - "127.0.0.1:${INTEGRA_HOST_PORT:-8080}:8080"
+    volumes:
+      - integra-data:/app/data
+
+volumes:
+  integra-data:
